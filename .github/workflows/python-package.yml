@@ -1,0 +1,57 @@
+name: Python package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    name: "CI setup"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.11"
+
+        os:
+          - "ubuntu-latest"
+
+    runs-on: "${{ matrix.os }}"
+
+    # use bash everywhere
+    defaults:
+      run:
+        shell: "bash -l {0}"
+
+    steps:
+      - name: "Checkout code"
+        uses: "actions/checkout@v4"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libgeos-dev
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Run pytest for everything but test_polygons
+        run: pytest -v --ignore-glob="*release*"
+
+      - name: Check style
+        run: yapf -d --recursive src/milliontrees/
+
+      #- name: Check notebook style
+      #  run: nbqa yapf --in-place docs/examples/*.ipynb --style=.style.yapf
+
+      # - name: Check notebook build
+      #   run: pytest --nbmake docs/*.ipynb
+
+      - name: Run docformatter
+        run: docformatter --wrap-summaries 100 --wrap-descriptions 100  --recursive src/milliontrees/
+
+      - name: Test Docs
+        run: |
+          cd docs && make clean && make html SPHINXOPTS="-W"
