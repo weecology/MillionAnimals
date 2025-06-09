@@ -124,71 +124,82 @@ def zip_directory(folder_path, zip_path):
 def official_split(AnimalPolygons_datasets, AnimalPoints_datasets, AnimalBoxes_datasets, base_dir, version):
     """Perform official split and save the results."""
     # Randomly split datasets into train and test (80/20 split)
-    AnimalPolygons_datasets = split_dataset(AnimalPolygons_datasets, split_column="filename", frac=0.8)
-    AnimalPoints_datasets = split_dataset(AnimalPoints_datasets, split_column="filename", frac=0.8)
-    AnimalBoxes_datasets = split_dataset(AnimalBoxes_datasets, split_column="filename", frac=0.8)
+    if not AnimalPolygons_datasets.empty:
+        AnimalPolygons_datasets = split_dataset(AnimalPolygons_datasets, split_column="filename", frac=0.8)
+        AnimalPolygons_datasets.to_csv(f"{base_dir}AnimalPolygons_{version}/official.csv", index=False)
+        print(f"Official split saved: AnimalPolygons_{version}/official.csv")
+    
+    if not AnimalPoints_datasets.empty:
+        AnimalPoints_datasets = split_dataset(AnimalPoints_datasets, split_column="filename", frac=0.8)
+        AnimalPoints_datasets.to_csv(f"{base_dir}AnimalPoints_{version}/official.csv", index=False)
+        print(f"Official split saved: AnimalPoints_{version}/official.csv")
+    
+    if not AnimalBoxes_datasets.empty:
+        AnimalBoxes_datasets = split_dataset(AnimalBoxes_datasets, split_column="filename", frac=0.8)
+        AnimalBoxes_datasets.to_csv(f"{base_dir}AnimalBoxes_{version}/official.csv", index=False)
+        print(f"Official split saved: AnimalBoxes_{version}/official.csv")
 
-    # Save the splits to CSV
-    AnimalPolygons_datasets.to_csv(f"{base_dir}AnimalPolygons_{version}/official.csv", index=False)
-    AnimalPoints_datasets.to_csv(f"{base_dir}AnimalPoints_{version}/official.csv", index=False)
-    AnimalBoxes_datasets.to_csv(f"{base_dir}AnimalBoxes_{version}/official.csv", index=False)
-
-    print("Official splits saved:")
-    print(f"AnimalPolygons: {base_dir}AnimalPolygons_{version}/official.csv")
-    print(f"AnimalPoints: {base_dir}AnimalPoints_{version}/official.csv")
-    print(f"AnimalBoxes: {base_dir}AnimalBoxes_{version}/official.csv")
+    print("Official splits completed.")
 
 def cross_geometry_split(AnimalPolygons_datasets, AnimalPoints_datasets, AnimalBoxes_datasets, base_dir, version):
     """Perform cross-geometry split and save the results."""
     # Assign all polygons to train, points to test, and boxes to test
-    AnimalPolygons_datasets["split"] = "train"
-    AnimalPoints_datasets["split"] = "test"
-    AnimalBoxes_datasets["split"] = "test"
+    if not AnimalPolygons_datasets.empty:
+        AnimalPolygons_datasets["split"] = "train"
+        AnimalPolygons_datasets.to_csv(f"{base_dir}AnimalPolygons_{version}/crossgeometry.csv", index=False)
+        print(f"Cross-geometry split saved: AnimalPolygons_{version}/crossgeometry.csv")
+    
+    if not AnimalPoints_datasets.empty:
+        AnimalPoints_datasets["split"] = "test"
+        AnimalPoints_datasets.to_csv(f"{base_dir}AnimalPoints_{version}/crossgeometry.csv", index=False)
+        print(f"Cross-geometry split saved: AnimalPoints_{version}/crossgeometry.csv")
+    
+    if not AnimalBoxes_datasets.empty:
+        AnimalBoxes_datasets["split"] = "test"
+        AnimalBoxes_datasets.to_csv(f"{base_dir}AnimalBoxes_{version}/crossgeometry.csv", index=False)
+        print(f"Cross-geometry split saved: AnimalBoxes_{version}/crossgeometry.csv")
 
-    # Save the splits to CSV
-    AnimalPolygons_datasets.to_csv(f"{base_dir}AnimalPolygons_{version}/crossgeometry.csv", index=False)
-    AnimalPoints_datasets.to_csv(f"{base_dir}AnimalPoints_{version}/crossgeometry.csv", index=False)
-    AnimalBoxes_datasets.to_csv(f"{base_dir}AnimalBoxes_{version}/crossgeometry.csv", index=False)
-
-    print("Cross-geometry splits saved:")
-    print(f"AnimalPolygons: {base_dir}AnimalPolygons_{version}/crossgeometry.csv")
-    print(f"AnimalPoints: {base_dir}AnimalPoints_{version}/crossgeometry.csv")
-    print(f"AnimalBoxes: {base_dir}AnimalBoxes_{version}/crossgeometry.csv")
+    print("Cross-geometry splits completed.")
 
 # Zero-shot split
 def zero_shot_split(AnimalPolygons_datasets, AnimalPoints_datasets, AnimalBoxes_datasets, base_dir, version):
     """Perform zero-shot split and save the results."""
-    # Define test and train sources
-    test_sources_polygons = ["Vasquez et al. 2023", "Miranda et al. 2024"]
-    train_sources_polygons = [x for x in AnimalPolygons_datasets.source.unique() if x not in test_sources_polygons]
+    # Define test and train sources - Update these based on your animal datasets
+    
+    # For polygons - specify which sources should be held out for testing
+    test_sources_polygons = []  # e.g., ["Wildlife Survey 2024", "Arctic Animals 2023"]
+    train_sources_polygons = [x for x in AnimalPolygons_datasets.source.unique() if x not in test_sources_polygons] if not AnimalPolygons_datasets.empty else []
 
-    test_sources_points = ["Amirkolaee et al. 2023"]
-    train_sources_points = [x for x in AnimalPoints_datasets.source.unique() if x not in test_sources_points]
+    # For points - specify which sources should be held out for testing
+    test_sources_points = []  # e.g., ["Marine Mammals 2024"]
+    train_sources_points = [x for x in AnimalPoints_datasets.source.unique() if x not in test_sources_points] if not AnimalPoints_datasets.empty else []
 
-    test_sources_boxes = ["Radogoshi et al. 2021"]
-    train_sources_boxes = [x for x in AnimalBoxes_datasets.source.unique() if x not in test_sources_boxes]
+    # For boxes - specify which sources should be held out for testing
+    test_sources_boxes = []  # e.g., ["Savanna Wildlife 2023"]
+    train_sources_boxes = [x for x in AnimalBoxes_datasets.source.unique() if x not in test_sources_boxes] if not AnimalBoxes_datasets.empty else []
 
     # Assign splits for polygons
-    AnimalPolygons_datasets.loc[AnimalPolygons_datasets.source.isin(train_sources_polygons), "split"] = "train"
-    AnimalPolygons_datasets.loc[AnimalPolygons_datasets.source.isin(test_sources_polygons), "split"] = "test"
+    if not AnimalPolygons_datasets.empty:
+        AnimalPolygons_datasets.loc[AnimalPolygons_datasets.source.isin(train_sources_polygons), "split"] = "train"
+        AnimalPolygons_datasets.loc[AnimalPolygons_datasets.source.isin(test_sources_polygons), "split"] = "test"
+        AnimalPolygons_datasets.to_csv(f"{base_dir}AnimalPolygons_{version}/zeroshot.csv", index=False)
+        print(f"Zero-shot split saved: AnimalPolygons_{version}/zeroshot.csv")
 
     # Assign splits for points
-    AnimalPoints_datasets.loc[AnimalPoints_datasets.source.isin(train_sources_points), "split"] = "train"
-    AnimalPoints_datasets.loc[AnimalPoints_datasets.source.isin(test_sources_points), "split"] = "test"
+    if not AnimalPoints_datasets.empty:
+        AnimalPoints_datasets.loc[AnimalPoints_datasets.source.isin(train_sources_points), "split"] = "train"
+        AnimalPoints_datasets.loc[AnimalPoints_datasets.source.isin(test_sources_points), "split"] = "test"
+        AnimalPoints_datasets.to_csv(f"{base_dir}AnimalPoints_{version}/zeroshot.csv", index=False)
+        print(f"Zero-shot split saved: AnimalPoints_{version}/zeroshot.csv")
 
     # Assign splits for boxes
-    AnimalBoxes_datasets.loc[AnimalBoxes_datasets.source.isin(train_sources_boxes), "split"] = "train"
-    AnimalBoxes_datasets.loc[AnimalBoxes_datasets.source.isin(test_sources_boxes), "split"] = "test"
+    if not AnimalBoxes_datasets.empty:
+        AnimalBoxes_datasets.loc[AnimalBoxes_datasets.source.isin(train_sources_boxes), "split"] = "train"
+        AnimalBoxes_datasets.loc[AnimalBoxes_datasets.source.isin(test_sources_boxes), "split"] = "test"
+        AnimalBoxes_datasets.to_csv(f"{base_dir}AnimalBoxes_{version}/zeroshot.csv", index=False)
+        print(f"Zero-shot split saved: AnimalBoxes_{version}/zeroshot.csv")
 
-    # Save the splits to CSV
-    AnimalPolygons_datasets.to_csv(f"{base_dir}AnimalPolygons_{version}/zeroshot.csv", index=False)
-    AnimalPoints_datasets.to_csv(f"{base_dir}AnimalPoints_{version}/zeroshot.csv", index=False)
-    AnimalBoxes_datasets.to_csv(f"{base_dir}AnimalBoxes_{version}/zeroshot.csv", index=False)
-
-    print("Zero-shot splits saved:")
-    print(f"AnimalPolygons: {base_dir}AnimalPolygons_{version}/zeroshot.csv")
-    print(f"AnimalPoints: {base_dir}AnimalPoints_{version}/zeroshot.csv")
-    print(f"AnimalBoxes: {base_dir}AnimalBoxes_{version}/zeroshot.csv")
+    print("Zero-shot splits completed.")
 
 def check_for_updated_annotations(dataset, geometry):
     updated_annotations = [pd.read_csv(x) for x in glob.glob(f"data_prep/annotations/*{geometry}*.csv")]
@@ -229,113 +240,134 @@ def check_for_updated_annotations(dataset, geometry):
             continue
 
 def run(version, base_dir, debug=False):
+    # These lists will be populated with animal dataset paths from Dropbox
     AnimalBoxes = [
-        #"/orange/ewhite/DeepForest/Ryoungseob_2023/train_datasets/images/train.csv",
-        #"/orange/ewhite/DeepForest/Velasquez_urban_trees/tree_canopies/nueva_carpeta/annotations.csv",
-        #'/orange/ewhite/DeepForest/individual_urban_tree_crown_detection/annotations.csv',
-        '/orange/ewhite/DeepForest/Radogoshi_Sweden/annotations.csv',
-        "/orange/ewhite/DeepForest/WRI/WRI-labels-opensource/annotations.csv",
-        #"/orange/ewhite/DeepForest/Guangzhou2022/annotations.csv",
-        "/orange/ewhite/DeepForest/NEON_benchmark/NeonTreeEvaluation_annotations.csv",
-        "/orange/ewhite/DeepForest/NEON_benchmark/University_of_Florida.csv",
-        '/orange/ewhite/DeepForest/ReForestTree/images/train.csv',
-        # "/orange/ewhite/DeepForest/Santos2019/annotations.csv",
-        "/orange/ewhite/DeepForest/Zenodo_15155081/parsed_annotations.csv"
-   ]
+        # Example: "/path/to/wildlife_drones/annotations.csv",
+        # Add your animal bounding box datasets here
+    ]
 
     AnimalPoints = [
-        "/orange/ewhite/DeepForest/TreeFormer/all_images/annotations.csv",
-        "/orange/ewhite/DeepForest/Ventura_2022/urban-tree-detection-data/images/annotations.csv",
-        "/orange/ewhite/MillionAnimals/NEON_points/annotations.csv",
-        "/orange/ewhite/DeepForest/Tonga/annotations.csv",
+        # Example: "/path/to/marine_mammals/annotations.csv",
+        # Add your animal point datasets here
     ]
 
     AnimalPolygons = [
-        "/orange/ewhite/DeepForest/Jansen_2023/pngs/annotations.csv",
-        "/orange/ewhite/DeepForest/Troles_Bamberg/coco2048/annotations/annotations.csv",
-        "/orange/ewhite/DeepForest/Cloutier2023/images/annotations.csv",
-        "/orange/ewhite/DeepForest/Firoze2023/annotations.csv",
-        #"/orange/ewhite/DeepForest/Wagner_Australia/annotations.csv",
-        #"/orange/ewhite/DeepForest/Alejandro_Chile/alejandro/annotations.csv",
-        #"/orange/ewhite/DeepForest/UrbanLondon/annotations.csv",
-        #"/orange/ewhite/DeepForest/OliveTrees_spain/Dataset_RGB/annotations.csv",
-        #"/orange/ewhite/DeepForest/Araujo_2020/annotations.csv",
-        #"/orange/ewhite/DeepForest/justdiggit-drone/label_sample/annotations.csv",
-        "/orange/ewhite/DeepForest/BCI/BCI_50ha_2020_08_01_crownmap_raw/annotations.csv",
-        "/orange/ewhite/DeepForest/BCI/BCI_50ha_2022_09_29_crownmap_raw/annotations.csv",
-        "/orange/ewhite/DeepForest/Harz_Mountains/ML_TreeDetection_Harz/annotations.csv",
-        "/orange/ewhite/DeepForest/SPREAD/annotations.csv",
-        "/orange/ewhite/DeepForest/KagglePalm/Palm-Counting-349images/annotations.csv",
-        "/orange/ewhite/DeepForest/Kattenborn/uav_newzealand_waititu/crops/annotations.csv",
-        "/orange/ewhite/DeepForest/Quebec_Lefebvre/Dataset/Crops/annotations.csv"
+        # Example: "/path/to/livestock_monitoring/annotations.csv",
+        # Add your animal polygon datasets here
     ]
 
+    # Check if any datasets are provided
+    if not any([AnimalBoxes, AnimalPoints, AnimalPolygons]):
+        print("No datasets provided. Please add animal dataset paths to the lists above.")
+        return
+
     # Combine datasets
-    AnimalBoxes_datasets = combine_datasets(AnimalBoxes, debug=debug)
-    AnimalPoints_datasets = combine_datasets(AnimalPoints, debug=debug)
-    AnimalPolygons_datasets = combine_datasets(AnimalPolygons, debug=debug)
+    AnimalBoxes_datasets = combine_datasets(AnimalBoxes, debug=debug) if AnimalBoxes else pd.DataFrame()
+    AnimalPoints_datasets = combine_datasets(AnimalPoints, debug=debug) if AnimalPoints else pd.DataFrame()
+    AnimalPolygons_datasets = combine_datasets(AnimalPolygons, debug=debug) if AnimalPolygons else pd.DataFrame()
 
-    # Remove rows where xmin equals xmax
-    AnimalBoxes_datasets = AnimalBoxes_datasets[AnimalBoxes_datasets["xmin"] != AnimalBoxes_datasets["xmax"]]
-    AnimalBoxes_datasets = AnimalBoxes_datasets[AnimalBoxes_datasets["ymin"] != AnimalBoxes_datasets["ymax"]]
+    # Only process datasets that have data
+    if not AnimalBoxes_datasets.empty:
+        # Remove rows where xmin equals xmax
+        AnimalBoxes_datasets = AnimalBoxes_datasets[AnimalBoxes_datasets["xmin"] != AnimalBoxes_datasets["xmax"]]
+        AnimalBoxes_datasets = AnimalBoxes_datasets[AnimalBoxes_datasets["ymin"] != AnimalBoxes_datasets["ymax"]]
+        
+        # Remove alpha channels
+        remove_alpha_channel(AnimalBoxes_datasets)
+        
+        # Check for updated annotations
+        check_for_updated_annotations(AnimalBoxes_datasets, "Boxes")
+        
+        # Split datasets
+        AnimalBoxes_datasets = split_dataset(AnimalBoxes_datasets)
+        
+        # Process geometry columns
+        AnimalBoxes_datasets = process_geometry_columns(AnimalBoxes_datasets, "box")
+        
+        # Create directories
+        create_directories(base_dir, "AnimalBoxes")
+        
+        # Copy images
+        copy_images(AnimalBoxes_datasets, base_dir, "AnimalBoxes")
+        
+        # change filenames to relative path
+        AnimalBoxes_datasets["filename"] = AnimalBoxes_datasets["filename"].apply(os.path.basename)
+        
+        # Create mini datasets
+        create_mini_datasets(AnimalBoxes_datasets, base_dir, "AnimalBoxes", version)
 
-    # Remove alpha channels
-    remove_alpha_channel(AnimalBoxes_datasets)
-    remove_alpha_channel(AnimalPoints_datasets)
-    remove_alpha_channel(AnimalPolygons_datasets)
+    if not AnimalPoints_datasets.empty:
+        # Remove alpha channels
+        remove_alpha_channel(AnimalPoints_datasets)
+        
+        # Check for updated annotations
+        check_for_updated_annotations(AnimalPoints_datasets, "Points")
+        
+        # Split datasets
+        AnimalPoints_datasets = split_dataset(AnimalPoints_datasets)
+        
+        # Process geometry columns
+        AnimalPoints_datasets = process_geometry_columns(AnimalPoints_datasets, "point")
+        
+        # Create directories
+        create_directories(base_dir, "AnimalPoints")
+        
+        # Copy images
+        copy_images(AnimalPoints_datasets, base_dir, "AnimalPoints")
+        
+        # change filenames to relative path
+        AnimalPoints_datasets["filename"] = AnimalPoints_datasets["filename"].apply(os.path.basename)
+        
+        # Create mini datasets
+        create_mini_datasets(AnimalPoints_datasets, base_dir, "AnimalPoints", version)
 
-    # Check for updated annotations
-    check_for_updated_annotations(AnimalBoxes_datasets, "Boxes")
-    check_for_updated_annotations(AnimalPoints_datasets, "Points")
-    #check_for_updated_annotations(AnimalPolygons_datasets, "Polygons")
+    if not AnimalPolygons_datasets.empty:
+        # Remove alpha channels
+        remove_alpha_channel(AnimalPolygons_datasets)
+        
+        # Check for updated annotations
+        check_for_updated_annotations(AnimalPolygons_datasets, "Polygons")
+        
+        # Split datasets
+        AnimalPolygons_datasets = split_dataset(AnimalPolygons_datasets)
+        
+        # Process geometry columns
+        AnimalPolygons_datasets = process_geometry_columns(AnimalPolygons_datasets, "polygon")
+        
+        # Create directories
+        create_directories(base_dir, "AnimalPolygons")
+        
+        # Copy images
+        copy_images(AnimalPolygons_datasets, base_dir, "AnimalPolygons")
+        
+        # change filenames to relative path
+        AnimalPolygons_datasets["filename"] = AnimalPolygons_datasets["filename"].apply(os.path.basename)
+        
+        # Create mini datasets
+        create_mini_datasets(AnimalPolygons_datasets, base_dir, "AnimalPolygons", version)
 
-    # Split datasets
-    AnimalBoxes_datasets = split_dataset(AnimalBoxes_datasets)
-    AnimalPoints_datasets = split_dataset(AnimalPoints_datasets)
-    AnimalPolygons_datasets = split_dataset(AnimalPolygons_datasets)
-
-    # Process geometry columns
-    AnimalBoxes_datasets = process_geometry_columns(AnimalBoxes_datasets, "box")
-    AnimalPoints_datasets = process_geometry_columns(AnimalPoints_datasets, "point")
-    AnimalPolygons_datasets = process_geometry_columns(AnimalPolygons_datasets, "polygon")
-
-    # Create directories
-    create_directories(base_dir, "AnimalBoxes")
-    create_directories(base_dir, "AnimalPoints")
-    create_directories(base_dir, "AnimalPolygons")
-
-    # Copy images
-    copy_images(AnimalBoxes_datasets, base_dir, "AnimalBoxes")
-    copy_images(AnimalPoints_datasets, base_dir, "AnimalPoints")
-    copy_images(AnimalPolygons_datasets, base_dir, "AnimalPolygons")
-
-    # change filenames to relative path
-    AnimalBoxes_datasets["filename"] = AnimalBoxes_datasets["filename"].apply(os.path.basename)
-    AnimalPoints_datasets["filename"] = AnimalPoints_datasets["filename"].apply(os.path.basename)
-    AnimalPolygons_datasets["filename"] = AnimalPolygons_datasets["filename"].apply(os.path.basename)
-
-    # Create mini datasets
-    create_mini_datasets(AnimalBoxes_datasets, base_dir, "AnimalBoxes", version)
-    create_mini_datasets(AnimalPoints_datasets, base_dir, "AnimalPoints", version)
-    create_mini_datasets(AnimalPolygons_datasets, base_dir, "AnimalPolygons", version)
-
-    # Perform splits
-    zero_shot_split(AnimalPolygons_datasets, AnimalPoints_datasets, AnimalBoxes_datasets, base_dir, version)
-    official_split(AnimalPolygons_datasets, AnimalPoints_datasets, AnimalBoxes_datasets, base_dir, version)
-    cross_geometry_split(AnimalPolygons_datasets, AnimalPoints_datasets, AnimalBoxes_datasets, base_dir, version)
-
-    # Create release files
-    create_release_files(base_dir, "AnimalBoxes")
-    create_release_files(base_dir, "AnimalPoints")
-    create_release_files(base_dir, "AnimalPolygons")
-
-    # Zip datasets
-    zip_directory(f"{base_dir}AnimalBoxes_{version}", f"{base_dir}AnimalBoxes_{version}.zip")
-    zip_directory(f"{base_dir}AnimalPoints_{version}", f"{base_dir}AnimalPoints_{version}.zip")
-    zip_directory(f"{base_dir}AnimalPolygons_{version}", f"{base_dir}AnimalPolygons_{version}.zip")
-    zip_directory(f"{base_dir}MiniAnimalBoxes_{version}", f"{base_dir}MiniAnimalBoxes_{version}.zip")
-    zip_directory(f"{base_dir}MiniAnimalPoints_{version}", f"{base_dir}MiniAnimalPoints_{version}.zip")
-    zip_directory(f"{base_dir}MiniAnimalPolygons_{version}", f"{base_dir}MiniAnimalPolygons_{version}.zip")
+    # Only perform splits and create release files if we have data
+    if any([not df.empty for df in [AnimalPolygons_datasets, AnimalPoints_datasets, AnimalBoxes_datasets]]):
+        # Perform splits
+        zero_shot_split(AnimalPolygons_datasets, AnimalPoints_datasets, AnimalBoxes_datasets, base_dir, version)
+        official_split(AnimalPolygons_datasets, AnimalPoints_datasets, AnimalBoxes_datasets, base_dir, version)
+        cross_geometry_split(AnimalPolygons_datasets, AnimalPoints_datasets, AnimalBoxes_datasets, base_dir, version)
+        
+        # Create release files
+        if not AnimalBoxes_datasets.empty:
+            create_release_files(base_dir, "AnimalBoxes")
+            zip_directory(f"{base_dir}AnimalBoxes_{version}", f"{base_dir}AnimalBoxes_{version}.zip")
+            zip_directory(f"{base_dir}MiniAnimalBoxes_{version}", f"{base_dir}MiniAnimalBoxes_{version}.zip")
+            
+        if not AnimalPoints_datasets.empty:
+            create_release_files(base_dir, "AnimalPoints")
+            zip_directory(f"{base_dir}AnimalPoints_{version}", f"{base_dir}AnimalPoints_{version}.zip")
+            zip_directory(f"{base_dir}MiniAnimalPoints_{version}", f"{base_dir}MiniAnimalPoints_{version}.zip")
+            
+        if not AnimalPolygons_datasets.empty:
+            create_release_files(base_dir, "AnimalPolygons")
+            zip_directory(f"{base_dir}AnimalPolygons_{version}", f"{base_dir}AnimalPolygons_{version}.zip")
+            zip_directory(f"{base_dir}MiniAnimalPolygons_{version}", f"{base_dir}MiniAnimalPolygons_{version}.zip")
 
 
 if __name__ == "__main__":
