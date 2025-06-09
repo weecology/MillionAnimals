@@ -41,7 +41,7 @@ jobs:
         run: pytest -v --ignore-glob="*release*"
 
       - name: Check style
-        run: yapf -d --recursive src/milliontrees/
+        run: yapf -d --recursive src/millionanimals/
 
       #- name: Check notebook style
       #  run: nbqa yapf --in-place docs/examples/*.ipynb --style=.style.yapf
@@ -50,7 +50,7 @@ jobs:
       #   run: pytest --nbmake docs/*.ipynb
 
       - name: Run docformatter
-        run: docformatter --wrap-summaries 100 --wrap-descriptions 100  --recursive src/milliontrees/
+        run: docformatter --wrap-summaries 100 --wrap-descriptions 100  --recursive src/millionanimals/
 
       - name: Test Docs
         run: |
