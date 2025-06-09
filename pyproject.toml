@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61", "setuptools-scm[toml]>=6.2.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "millionanimals"
+version = "0.1.2"
+description = "Benchmark dataset for Airborne Animal Detection and Machine Learning"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8,<3.13"
+classifiers = [
+    "Development Status :: 6 - Mature",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+]
+
+authors = [
+    { name = "Ben Weinstein", email = "benweinstein@weecology.org" },
+    { name = "Henry Senyondo", email = "henrykironde@gmail.com" },
+    { name = "Ethan White", email = "ethan@weecology.org" },
+]
+
+urls.Documentation = "http://millionanimals.readthedocs.io/en/latest/"
+urls.Source = "https://github.com/Weecology/MillionAnimals"
+urls.Contributors = "https://github.com/Weecology/MillionAnimals/graphs/contributors"
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "pillow",
+    "torch",
+    "torchvision",
+    "tqdm",
+    "pytest",
+    "scikit-learn",
+    "shapely",
+    "bumpversion",
+    "yapf",
+    "sphinx",
+    "furo",
+    "sphinx_markdown_tables",
+    "myst_parser",
+    "albumentations",
+    "torchmetrics",
+    "docformatter",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages.find = {where = ["src"], include = ["millionanimals*"]}

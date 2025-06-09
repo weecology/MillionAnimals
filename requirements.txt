@@ -1,0 +1,35 @@
+# Core dependencies
+numpy
+pandas
+pillow
+torch
+torchvision
+tqdm
+pytest
+scikit-learn
+shapely
+albumentations
+
+# Documentation
+sphinx
+furo
+sphinx_markdown_tables
+myst_parser
+docformatter
+
+# Development tools
+bumpversion
+yapf
+black
+flake8
+
+# Label Studio tools
+label-studio-sdk
+paramiko
+python-dotenv
+
+# Version checking
+outdated
+
+# Metrics
+torchmetrics
