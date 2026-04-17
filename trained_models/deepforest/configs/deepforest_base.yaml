@@ -1,0 +1,23 @@
+# Base experiment metadata for future MillionAnimals DeepForest training runs.
+# Fill this in per experiment and keep a copy for reproducibility.
+
+experiment_name: df_YYYYMMDD_boxes_v01
+dataset_geometry: boxes
+dataset_version: TODO
+split_scheme: official
+
+model:
+  architecture: deepforest
+  pretrained_weights: TODO
+
+training:
+  epochs: TODO
+  batch_size: TODO
+  learning_rate: TODO
+  image_size: TODO
+
+artifacts:
+  checkpoint_dir: trained_models/deepforest/checkpoints
+  lightning_log_dir: trained_models/deepforest/lightning_logs
+  prediction_dir: trained_models/deepforest/predictions
+  export_dir: trained_models/deepforest/exports

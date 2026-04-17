@@ -9,7 +9,26 @@ This directory contains utilities for preparing and packaging animal detection d
 - **label_studio_utils.py** - Utilities for working with Label Studio annotations
 - **annotation_loop.py** - Script for iterative annotation workflow
 - **preprocess_polygons.py** - Utilities for processing polygon annotations
-- **Dataset scripts** - Individual Python scripts for each dataset (to be added)
+- **sources_airborne/** - Auto-generated dataset prep scaffolds for open-download airborne sources
+- **source_registry/** - Worksheet curation outputs (registry CSV, candidate links, contact drafts)
+- **Dataset scripts** - Individual Python scripts for each dataset (to be expanded)
+
+## Airborne Worksheet Curation
+
+We run a first-pass curation from the Airborne worksheet in the collection spreadsheet and store the outputs under `source_registry/`:
+
+- `airborne_sources_registry.csv`: normalized source table with inferred access category
+- `open_download_candidates.md`: sources with links that appear to be open download repositories
+- `contact_author_email_drafts.md`: brief request emails for contact-required/request-only sources
+
+This pass creates metadata and scaffolds only. No datasets are downloaded in this step.
+
+## Bootstrap End-to-End Workflow (AnimalBoxes)
+
+For a full smoke-test of the pipeline (download -> format -> package -> train), see:
+
+- `workflows/animalboxes_bootstrap/README.md`
+- `workflows/animalboxes_bootstrap/run_end_to_end.sh`
 
 ## Adding a New Animal Dataset
 

@@ -5,6 +5,36 @@ There are three datasets within the MillionAnimals package: AnimalBoxes, AnimalP
 
 **Dataset Collection:** We are actively collecting datasets for inclusion. Please see our [dataset collection spreadsheet](https://docs.google.com/spreadsheets/d/12D3BnlE1car_CzngrwoPG7uySKoaKweYkneEBkgrRKw/edit?usp=sharing) for datasets under consideration.
 
+## Dataset Filtering and Management
+
+MillionAnimals datasets can contain very large numbers of annotations. Use source filtering to inspect and subset data before training.
+
+### Source Filtering
+
+List available sources:
+
+```py
+from millionanimals.datasets.AnimalPoints import AnimalPointsDataset
+dataset = AnimalPointsDataset()
+sources = sorted(dataset.df.source.unique())
+print("Available sources:", sources[:10], "...")
+```
+
+Include only specific sources (example pattern):
+
+```py
+import pandas as pd
+from millionanimals.datasets.AnimalBoxes import AnimalBoxesDataset
+
+dataset = AnimalBoxesDataset()
+subset_sources = ["Example Source Name"]
+subset_df = dataset.df[dataset.df.source.isin(subset_sources)].copy()
+```
+
+### Mini-datasets
+
+Each geometry includes mini versions intended for quick smoke tests and visualization checks. See the package release notes for the current mini split contents.
+
 ## AnimalBoxes
 
 Bounding box annotations of animals from aerial imagery. These datasets provide rectangular bounding boxes around individual animals detected in drone, aircraft, or satellite imagery.

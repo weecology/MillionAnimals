@@ -1,16 +1,39 @@
 import pandas as pd
 import os
 import shutil
-import geopandas as gpd
 import zipfile
-from deepforest.visualize import plot_results
-from deepforest.utilities import read_file
-import cv2
-import rasterio
+import argparse
 import glob
+from pathlib import Path
+from shapely import wkt
+
+try:
+    import geopandas as gpd
+except ImportError:
+    gpd = None
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+
+try:
+    import rasterio
+except ImportError:
+    rasterio = None
+
+try:
+    from deepforest.visualize import plot_results
+    from deepforest.utilities import read_file
+except ImportError:
+    plot_results = None
+    read_file = None
 
 def remove_alpha_channel(datasets):
     """Remove alpha channels from images in the dataset."""
+    if rasterio is None:
+        print("rasterio not installed; skipping alpha-channel checks.")
+        return
     for source in datasets["source"].unique():
         source_images = datasets[datasets["source"] == source]["filename"].unique()
         for image in source_images:
@@ -50,6 +73,10 @@ def split_dataset(datasets, split_column="filename", frac=0.8):
 
 def process_geometry_columns(datasets, geom_type):
     """Process geometry columns based on the dataset type."""
+    if gpd is None:
+        raise ImportError(
+            "geopandas is required for process_geometry_columns in full packaging mode."
+        )
     if geom_type == "box":
         datasets[["xmin", "ymin", "xmax", "ymax"]] = gpd.GeoSeries.from_wkt(datasets["geometry"]).bounds
     elif geom_type == "point":
@@ -87,6 +114,11 @@ def create_mini_datasets(datasets, base_dir, dataset_type, version):
         destination = f"{base_dir}Mini{dataset_type}_{version}/images/"
         shutil.copy(f"{base_dir}{dataset_type}_{version}/images/" + image, destination)
 
+    # Generate visualizations for each source if DeepForest is available.
+    if read_file is None or plot_results is None:
+        print("DeepForest not installed; skipping mini-dataset visualization plots.")
+        return
+
     # Generate visualizations for each source
     for source, group in mini_annotations.groupby("source"):
         group["image_path"] = group["filename"]
@@ -97,7 +129,7 @@ def create_mini_datasets(datasets, base_dir, dataset_type, version):
         source = source.replace(" ", "_")
         
         # Handle polygons specifically to include image dimensions
-        if dataset_type == "AnimalPolygons":
+        if dataset_type == "AnimalPolygons" and cv2 is not None:
             height, width, channels = cv2.imread(f"{base_dir}Mini{dataset_type}_{version}/images/" + group.image_path.iloc[0]).shape
             plot_results(group, savedir="/home/b.weinstein/MillionAnimals/docs/public/", basename=source, height=height, width=width)
         else:
@@ -370,8 +402,117 @@ def run(version, base_dir, debug=False):
             zip_directory(f"{base_dir}MiniAnimalPolygons_{version}", f"{base_dir}MiniAnimalPolygons_{version}.zip")
 
 
+def run_bootstrap_boxes(annotations_csv, version, base_dir, seed=42):
+    """Package a single AnimalBoxes-formatted annotations CSV into a local release layout.
+
+    Expected annotation columns:
+        geometry, image_path, label, source
+    """
+    annotations_csv = Path(annotations_csv)
+    base_dir = Path(base_dir)
+    if not annotations_csv.exists():
+        raise FileNotFoundError(f"Annotations CSV not found: {annotations_csv}")
+
+    df = pd.read_csv(annotations_csv)
+    required = {"geometry", "image_path", "source"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"Missing required columns in {annotations_csv}: {missing}")
+
+    # Keep only rows with existing image files.
+    df = df[df["image_path"].apply(lambda p: Path(p).exists())].copy()
+    if df.empty:
+        raise ValueError("No valid rows with existing image paths were found.")
+
+    geometries = df["geometry"].apply(wkt.loads)
+    df["xmin"] = geometries.apply(lambda g: float(g.bounds[0]))
+    df["ymin"] = geometries.apply(lambda g: float(g.bounds[1]))
+    df["xmax"] = geometries.apply(lambda g: float(g.bounds[2]))
+    df["ymax"] = geometries.apply(lambda g: float(g.bounds[3]))
+    df = df[df["xmin"] < df["xmax"]]
+    df = df[df["ymin"] < df["ymax"]]
+
+    unique_images = df["image_path"].drop_duplicates().sample(
+        frac=1.0, random_state=seed).tolist()
+    n_total = len(unique_images)
+    n_train = max(1, int(round(n_total * 0.8)))
+    n_train = min(n_train, n_total - 1) if n_total > 1 else 1
+    train_images = set(unique_images[:n_train])
+    df["split"] = df["image_path"].apply(lambda p: "train" if p in train_images else "test")
+
+    dataset_dir = base_dir / f"AnimalBoxes_v{version}"
+    mini_dir = base_dir / f"MiniAnimalBoxes_v{version}"
+    images_dir = dataset_dir / "images"
+    mini_images_dir = mini_dir / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
+    mini_images_dir.mkdir(parents=True, exist_ok=True)
+
+    # Copy images into package layout.
+    image_name_map = {}
+    for image_path in df["image_path"].drop_duplicates():
+        src = Path(image_path)
+        dst = images_dir / src.name
+        if not dst.exists():
+            shutil.copy(src, dst)
+        image_name_map[image_path] = src.name
+
+    df["filename"] = df["image_path"].map(image_name_map)
+    official = df[["filename", "xmin", "ymin", "xmax", "ymax", "source", "split"]].copy()
+    official.to_csv(dataset_dir / "official.csv", index=False)
+    official.to_csv(dataset_dir / "crossgeometry.csv", index=False)
+    official.to_csv(dataset_dir / "zeroshot.csv", index=False)
+
+    # One-image-per-source mini set.
+    mini_images = official.drop_duplicates(subset=["source"])["filename"].tolist()
+    mini_df = official[official["filename"].isin(mini_images)].copy()
+    mini_df.to_csv(mini_dir / "official.csv", index=False)
+    mini_df.to_csv(mini_dir / "crossgeometry.csv", index=False)
+    mini_df.to_csv(mini_dir / "zeroshot.csv", index=False)
+
+    for filename in mini_images:
+        src = images_dir / filename
+        dst = mini_images_dir / filename
+        if src.exists() and not dst.exists():
+            shutil.copy(src, dst)
+
+    with open(dataset_dir / f"RELEASE_v{version}.txt", "w") as f:
+        f.write(f"Version: v{version}\n")
+    with open(mini_dir / f"RELEASE_v{version}.txt", "w") as f:
+        f.write(f"Version: v{version}\n")
+
+    zip_directory(str(dataset_dir), str(base_dir / f"AnimalBoxes_v{version}.zip"))
+    zip_directory(str(mini_dir), str(base_dir / f"MiniAnimalBoxes_v{version}.zip"))
+    print(f"Packaged AnimalBoxes dataset at: {dataset_dir}")
+    print(f"Packaged MiniAnimalBoxes dataset at: {mini_dir}")
+
+
 if __name__ == "__main__":
-    version = "v0.4"
-    base_dir = "/orange/ewhite/web/public/"
-    debug = False
-    run(version, base_dir, debug)
+    parser = argparse.ArgumentParser(description="Package MillionAnimals datasets.")
+    parser.add_argument("--version", default="v0.4", help="Version for default packaging run().")
+    parser.add_argument("--base-dir", default="/orange/ewhite/web/public/", help="Output base dir for default run().")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode for default run().")
+    parser.add_argument(
+        "--bootstrap-annotations",
+        default=None,
+        help="Path to an annotations CSV (geometry,image_path,label,source) for local AnimalBoxes packaging.",
+    )
+    parser.add_argument(
+        "--bootstrap-version",
+        default="0.3",
+        help="Version suffix used for bootstrap packaged directories.",
+    )
+    parser.add_argument(
+        "--bootstrap-base-dir",
+        default="workflows/animalboxes_bootstrap/packaged",
+        help="Output base dir for bootstrap packaging.",
+    )
+    args = parser.parse_args()
+
+    if args.bootstrap_annotations:
+        run_bootstrap_boxes(
+            annotations_csv=args.bootstrap_annotations,
+            version=args.bootstrap_version,
+            base_dir=args.bootstrap_base_dir,
+        )
+    else:
+        run(args.version, args.base_dir, args.debug)

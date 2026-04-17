@@ -64,6 +64,10 @@ class AnimalBoxesDataset(MillionAnimalsDataset):
                 "https://data.rc.ufl.edu/pub/ewhite/AnimalBoxes_v0.2.zip",
             'compressed_size':
                 6717977561
+        },
+        "0.3": {
+            'download_url': None,
+            'compressed_size': 0
         }
     }
 

@@ -162,3 +162,9 @@ cython_debug/
 
 # MacOS
 *.DS_store*
+
+# Local workflow artifacts (never commit downloaded/generated data)
+data_prep/annotations/
+workflows/animalboxes_bootstrap/raw/
+workflows/animalboxes_bootstrap/packaged/
+trained_models/deepforest/bootstrap_run/

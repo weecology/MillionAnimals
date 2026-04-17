@@ -5,7 +5,7 @@
 
 # Overview
 
-The MillionAnimals benchmark is designed to provide *open*, *reproducible* and *rigorous* evaluation of animal detection algorithms from aerial imagery. This repo is the python package for rapid data sharing and evaluation.
+The MillionAnimals benchmark is designed to provide *open*, *reproducible*, and *rigorous* evaluation of animal detection algorithms from aerial imagery. This repo is the Python package for rapid data sharing and evaluation.
 
 The MillionAnimals project is an adaptation of the [MillionTrees](https://github.com/weecology/MillionTrees) benchmark, focusing on animal detection instead of tree detection.
 
@@ -14,6 +14,8 @@ The MillionAnimals project is an adaptation of the [MillionTrees](https://github
 We are in the process of releasing public data, these are datasets that have previously been published and have a DOI. We will follow up this release, likely with a 1.0 tag, of the previously unpublished parts of the dataset along with a scientific manuscript.
 
 We are actively collecting datasets for inclusion in the benchmark. See our [dataset collection spreadsheet](https://docs.google.com/spreadsheets/d/12D3BnlE1car_CzngrwoPG7uySKoaKweYkneEBkgrRKw/edit?usp=sharing) for current datasets under consideration.
+
+`data_prep/source_registry/airborne_sources_registry.csv` tracks the current first-pass triage from the Airborne worksheet, including inferred access type and candidate download links.
 
 # Dataloaders
 
@@ -46,14 +48,15 @@ To build from the GitHub source and install the required dependencies, follow th
     cd MillionAnimals
     ```
 
-3. Install the required dependencies using pip:
+3. (Recommended) Create and activate a virtual environment, then install dev extras:
     ```
-    pip install -r requirements.txt
+    python -m venv .venv && source .venv/bin/activate
+    pip install -e .[dev,docs]
     ```
 
-4. (Optional) Build and install the package:
+4. (Optional) Build distributions:
     ```
-    python setup.py install
+    python -m build
     ```
 
 Once the installation is complete, you can use the MillionAnimals package in your Python projects.
