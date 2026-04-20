@@ -14,6 +14,7 @@ Use this workflow to generate a local package:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 from pathlib import Path
@@ -140,6 +141,11 @@ def main():
         default="weecology/deepforest-tree",
         help="DeepForest model identifier used by model.load_model(); set to 'none' to skip.",
     )
+    parser.add_argument(
+        "--comet",
+        action="store_true",
+        help="Log training metrics to Comet ML if configured.",
+    )
     args = parser.parse_args()
 
     try:
@@ -225,7 +231,34 @@ def main():
         )
         callbacks.append(checkpoint_cb)
 
+    logger = None
+    if args.comet:
+        try:
+            from pytorch_lightning.loggers import CometLogger
+
+            class SafeCometLogger(CometLogger):
+                """Comet logger that safely serializes non-JSON hparams."""
+
+                def log_hyperparams(self, params):
+                    safe = {}
+                    for key, value in params.items():
+                        try:
+                            json.dumps(value)
+                            safe[key] = value
+                        except (TypeError, ValueError):
+                            safe[key] = type(value).__name__
+                    super().log_hyperparams(safe)
+
+            logger = SafeCometLogger(
+                project_name="millionanimals-boxes",
+                tags=[f"split-{args.split_scheme}", "geometry-boxes"],
+            )
+            print("Comet logging enabled.")
+        except Exception as e:
+            print(f"Comet logging unavailable, continuing without it: {e}")
+
     model.create_trainer(
+        logger=logger,
         callbacks=callbacks,
         default_root_dir=args.output_dir,
         limit_train_batches=args.limit_train_batches,

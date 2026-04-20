@@ -168,3 +168,4 @@ data_prep/annotations/
 workflows/animalboxes_bootstrap/raw/
 workflows/animalboxes_bootstrap/packaged/
 trained_models/deepforest/bootstrap_run/
+trained_models/deepforest/bootstrap_run_comet/
