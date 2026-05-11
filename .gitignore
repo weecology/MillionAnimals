@@ -169,3 +169,10 @@ workflows/animalboxes_bootstrap/raw/
 workflows/animalboxes_bootstrap/packaged/
 trained_models/deepforest/bootstrap_run/
 trained_models/deepforest/bootstrap_run_comet/
+
+# Kaggle NOAA right whale workflow artifacts (keep README + train.slurm in git)
+workflows/kaggle_noaa_right_whale/packaged/
+workflows/kaggle_noaa_right_whale/*.csv
+workflows/kaggle_noaa_right_whale/*.zip
+workflows/kaggle_noaa_right_whale/slurm-*.out
+workflows/kaggle_noaa_right_whale/slurm-*.err
